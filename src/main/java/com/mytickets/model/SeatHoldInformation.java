@@ -1,20 +1,16 @@
 package com.mytickets.model;
 
 import java.util.Calendar;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import com.mytickets.service.api.SeatHold;
 import com.mytickets.service.api.SeatInfo;
 
 import lombok.Data;
@@ -35,18 +31,8 @@ public class SeatHoldInformation {
 	private Calendar seatHoldStartTime;
 	@Column(name = "hold_end_time", nullable = false)
 	private Calendar seatHoldEndTime;
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "holdInformation")
-	private Set<Seat> heldSeats;
+	private int numOfSeatsOnHold;
+	private transient Set<SeatInfo> seatInfo;
+	private SeatLevel seatLevel;
 
-	public SeatHold toSeatHold() {
-		SeatHold hold = new SeatHold(getId(), getCustomerEmail(), getSeatHoldStartTime(), getSeatHoldEndTime());
-		hold.setSeatsFound(new HashSet<>());
-		heldSeats.forEach(seat -> {
-			SeatLevel vl = seat.getSeatLevel();
-			hold.getSeatsFound().add(new SeatInfo(seat.getSeatRow(), 
-					seat.getSeatColumn(), vl.getLevelName(),
-					vl.getLevelId(), seat.getSeatName()));
-		});
-		return hold;
-	}
 }

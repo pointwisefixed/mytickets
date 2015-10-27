@@ -30,7 +30,8 @@ public class SeatLevel {
 	private int numOfSeatInRows;
 	@Column(name = "seat_level_price", nullable = false)
 	private BigDecimal levelPrice;
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "seatLevel")
-	private Set<Seat> seatsInLevel;
-
+	@OneToMany(fetch = FetchType.LAZY)
+	private Set<SeatHoldInformation> heldSeats;
+	@OneToMany(fetch = FetchType.LAZY)
+	private Set<SeatReservation> reservedSeats;
 }
