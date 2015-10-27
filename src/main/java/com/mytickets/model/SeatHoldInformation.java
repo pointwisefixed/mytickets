@@ -1,25 +1,28 @@
 package com.mytickets.model;
 
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import com.mytickets.service.api.SeatHold;
+import com.mytickets.service.api.SeatInfo;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper =false)
 @Entity
 @Table(name = "mt_seat_hold")
-public class SeatHold extends Creatable{
+public class SeatHoldInformation {
 
 	@Id
 	@Column(name = "seat_hold_id")
@@ -32,7 +35,18 @@ public class SeatHold extends Creatable{
 	private Calendar seatHoldStartTime;
 	@Column(name = "hold_end_time", nullable = false)
 	private Calendar seatHoldEndTime;
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "venue_seat_id", insertable = false, updatable = false)
-	private VenueSeat venueSeat;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "holdInformation")
+	private Set<Seat> heldSeats;
+
+	public SeatHold toSeatHold() {
+		SeatHold hold = new SeatHold(getId(), getCustomerEmail(), getSeatHoldStartTime(), getSeatHoldEndTime());
+		hold.setSeatsFound(new HashSet<>());
+		heldSeats.forEach(seat -> {
+			SeatLevel vl = seat.getSeatLevel();
+			hold.getSeatsFound().add(new SeatInfo(seat.getSeatRow(), 
+					seat.getSeatColumn(), vl.getLevelName(),
+					vl.getLevelId(), seat.getSeatName()));
+		});
+		return hold;
+	}
 }

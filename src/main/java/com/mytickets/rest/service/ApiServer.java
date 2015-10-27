@@ -9,4 +9,9 @@ public class ApiServer implements SparkApplication {
 		
 	}
 
+	@Override
+	public void destroy() {
+		SparkApplication.super.destroy();
+	}
+
 }

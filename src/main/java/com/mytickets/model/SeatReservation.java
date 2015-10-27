@@ -1,23 +1,24 @@
 package com.mytickets.model;
 
+import java.util.Calendar;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
+@Data
 @Entity
 @Table(name = "mt_seat_reservation")
-@Data
-@EqualsAndHashCode(callSuper = false)
-public class SeatReservation extends Creatable {
+public class SeatReservation {
 
 	@Id
 	@Column(name = "seat_reservation_id")
@@ -25,8 +26,12 @@ public class SeatReservation extends Creatable {
 	@GenericGenerator(name = "uuid2", strategy = "uuid2")
 	private String id;
 
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "venue_seat_id", insertable = false, updatable = false)
-	private VenueSeat venueSeat;
+	@Column(name = "customer_email", nullable = false)
+	private String customerEmail;
 
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "reservationInformation")
+	private Set<Seat> reservedSeats;
+
+	@Column(name = "created_date")
+	private Calendar createdDate;
 }
