@@ -12,9 +12,9 @@ import lombok.ToString;
 public class SeatHold {
 
 	private Set<SeatInfo> seatsFound = new HashSet<>();
-	private final String seatHoldId;
-	private final String customerId;
-	private final Calendar holdStartTime;
-	private final Calendar holdEndTime;
+	private String seatHoldId;
+	private String customerId;
+	private Calendar holdStartTime;
+	private Calendar holdEndTime;
 	private String message;
 }

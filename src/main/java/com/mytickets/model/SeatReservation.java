@@ -1,17 +1,17 @@
 package com.mytickets.model;
 
 import java.util.Calendar;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
-
-import com.mytickets.service.api.SeatInfo;
 
 import lombok.Data;
 
@@ -32,10 +32,7 @@ public class SeatReservation {
 	@Column(name = "created_date")
 	private Calendar createdDate;
 
-	private int numOfSeatsReserved;
-
-	private SeatLevel seatLevel;
-
-	private transient Set<SeatInfo> seatInfo;
-
+	@OneToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "seat_hold_info")
+	private SeatHoldInfo seatHoldInfo;
 }

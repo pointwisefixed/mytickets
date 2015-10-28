@@ -22,10 +22,12 @@ public class TicketServiceImpl implements TicketService {
 	@Override
 	public int numSeatsAvailable(Optional<Integer> venueLevel) {
 		int freeSeats = -1;
+		int venueLevelId = -1;
+		Calendar currentTime = Calendar.getInstance();
 		if (venueLevel.isPresent()) {
-			Calendar currentTime = Calendar.getInstance();
-			freeSeats = seatEventDao.getSeatsInLevel(venueLevel.get(), currentTime);
+			venueLevelId = venueLevel.get();
 		}
+		freeSeats = seatEventDao.getSeatsInLevel(venueLevelId, currentTime);
 		return freeSeats;
 	}
 
@@ -37,14 +39,15 @@ public class TicketServiceImpl implements TicketService {
 		Calendar startTime = Calendar.getInstance();
 		Calendar endTime = (Calendar) startTime.clone();
 		endTime.add(Calendar.SECOND, seatHoldTimeInSeconds);
-		return seatEventDao.holdSeats(numSeats, ml, mx, customerEmail, startTime, endTime).toSeatHold();
+		return null;
 	}
 
 	@Override
 	@Transactional
 	public String reserveSeats(int seatHoldId, String customerEmail) {
+		
 		SeatReservation reservation = new SeatReservation();
-
+		
 		return reservation.getId();
 	}
 
