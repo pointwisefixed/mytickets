@@ -30,4 +30,6 @@ public interface SeatDao {
 	SeatReservation createReservation(int seatHoldId, String customerEmail);
 	
 	Optional<SeatHoldInfo> getSeatHoldInfo(int seatHoldId);
+	
+	List<SeatLevel> createDefaultSeatLevels();
 }

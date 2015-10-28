@@ -8,6 +8,11 @@
 	<persistence-unit name="myTicketsInMem"
 		transaction-type="RESOURCE_LOCAL">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>com.mytickets.model.SeatAction</class>
+		<class>com.mytickets.model.SeatHoldInfo</class>
+		<class>com.mytickets.model.SeatLevel</class>
+		<class>com.mytickets.model.SeatReservation</class>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
 		<properties>
 			<property name="hibernate.archive.autodetection" value="class" />
@@ -17,7 +22,7 @@
 			<property name="hibernate.connection.user" value="sa" />
 			<!-- <property name="hibernate.show_sql" value="true"/> -->
 			<property name="hibernate.flushMode" value="FLUSH_AUTO" />
-			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
 		</properties>
 	</persistence-unit>
 </persistence>

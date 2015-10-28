@@ -11,11 +11,13 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import lombok.Data;
 
 @Data
 @Entity
+@Table(name="mt_seat_level")
 @Cacheable(true)
 public class SeatLevel {
 
@@ -27,7 +29,7 @@ public class SeatLevel {
 	@Column(name = "seat_level_rows", nullable = false)
 	private int rows;
 	@Column(name = "num_of_seats_in_row", nullable = false)
-	private int numOfSeatInRows;
+	private int numOfSeatsInRow;
 	@Column(name = "seat_level_price", nullable = false)
 	private BigDecimal levelPrice;
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "seatLevel")

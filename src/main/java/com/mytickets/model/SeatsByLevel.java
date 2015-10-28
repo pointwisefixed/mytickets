@@ -8,6 +8,10 @@ import lombok.Data;
 public class SeatsByLevel {
 
 	private int levelId;
-	private int reservedOrOnHoldSeats;
-	private int availableSeats;
+	private int totalSeats;
+	private long reservedOrOnHoldSeats;
+
+	public int getAvailableSeats() {
+		return totalSeats - (int) reservedOrOnHoldSeats;
+	}
 }
