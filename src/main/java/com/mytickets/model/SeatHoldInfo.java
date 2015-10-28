@@ -13,8 +13,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import com.mytickets.service.api.SeatHold;
 import com.mytickets.service.api.SeatInfo;
 

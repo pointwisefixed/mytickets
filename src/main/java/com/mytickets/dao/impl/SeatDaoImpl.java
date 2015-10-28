@@ -1,6 +1,10 @@
 package com.mytickets.dao.impl;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,10 +18,13 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 import com.mytickets.dao.SeatDao;
+import com.mytickets.model.SeatAction;
 import com.mytickets.model.SeatHoldInfo;
 import com.mytickets.model.SeatLevel;
+import com.mytickets.model.SeatLevelLocation;
 import com.mytickets.model.SeatReservation;
 import com.mytickets.model.SeatsByLevel;
+import com.mytickets.service.api.SeatInfo;
 
 public class SeatDaoImpl implements SeatDao {
 
@@ -27,6 +34,10 @@ public class SeatDaoImpl implements SeatDao {
 			+ "where sa.seatLevel in :levelId and (h.seatHoldEndTime < :holdStartTime or "
 			+ "r.id is not null)) as reservedOrOnHoldSeats, (totalSeats - reservedOrOnHoldSeats) as availableSeats "
 			+ "from SeatLevel l where l.levelId in :levelIds group by l.levelId order by l.levelId asc";
+
+	private static final String GET_SEATS_ON_HOLD = "select sa from SeatAction sa inner join fetch sa.seatLevel l left outer join sa.hold h "
+			+ "left outer join h.reservation r where (h.seatHoldEndTime > :now and r.id is null) or r.id is not null "
+			+ "and l.id in :levelIds";
 
 	private static final String GET_ALL_LEVEL_JQL = "select l from SeatLevel l order by l.levelId asc";
 
@@ -51,15 +62,53 @@ public class SeatDaoImpl implements SeatDao {
 	}
 
 	@Override
-	public SeatHoldInfo holdSeats(Map<Integer, List<Integer>> seatsToHoldByLevel, String customerEmail,
+	@Transactional
+	public SeatHoldInfo holdSeats(Map<SeatLevel, Collection<SeatAction>> seatsToHoldByLevel, String customerEmail,
 			Calendar holdStartTime, Calendar holdEndTime) {
+		SeatHoldInfo holdInfo = new SeatHoldInfo();
+		holdInfo.setSeatInfo(new HashSet<>());
+		;
+		holdInfo.setSeatHoldStartTime(holdStartTime);
+		holdInfo.setSeatHoldEndTime(holdEndTime);
+		holdInfo.setCustomerEmail(customerEmail);
+		List<SeatAction> holdSeats = new ArrayList<>();
+		for (SeatLevel level : seatsToHoldByLevel.keySet()) {
+			for (SeatAction seatAction : seatsToHoldByLevel.get(level)) {
+				SeatLevelLocation location = SeatLevelLocation.seatLocationFor(level.getRows(),
+						level.getNumOfSeatInRows(), seatAction.getSeatLocationIndex());
+				holdInfo.getSeatInfo().add(new SeatInfo(location.getRow(), location.getCol(), level.getLevelId()));
+				seatAction.setHold(holdInfo);
+			}
+			holdSeats.addAll(seatsToHoldByLevel.get(level));
+		}
+		EntityManager em = entityManagerProvider.get();
+		em.persist(holdInfo);
 
-		return null;
+		for (SeatAction seatAction : holdSeats) {
+			em.persist(seatAction);
+		}
+
+		return holdInfo;
 	}
 
 	@Override
-	public Map<Integer, Integer> getTakenLocationsByLevel(Set<Integer> levels) {
-		return null;
+	@Transactional
+	public Map<Integer, List<Integer>> getTakenLocationsByLevel(Set<Integer> levels) {
+		EntityManager em = entityManagerProvider.get();
+		TypedQuery<SeatAction> takenSeatsQ = em.createQuery(GET_SEATS_ON_HOLD, SeatAction.class);
+		takenSeatsQ.setParameter("levelIds", levels);
+		List<SeatAction> takenSeats = takenSeatsQ.getResultList();
+		Map<Integer, List<Integer>> takenLocations = new HashMap<>();
+		for (SeatAction seatAction : takenSeats) {
+			int levelId = seatAction.getSeatLevel().getLevelId();
+			List<Integer> takenByLevel = takenLocations.get(levelId);
+			if (takenByLevel == null) {
+				takenByLevel = new ArrayList<>();
+				takenLocations.put(levelId, takenByLevel);
+			}
+			takenByLevel.add(seatAction.getSeatLocationIndex());
+		}
+		return takenLocations;
 	}
 
 	@Transactional

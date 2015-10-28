@@ -1,6 +1,7 @@
 package com.mytickets.dao;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.Set;
 
 import com.google.inject.ImplementedBy;
 import com.mytickets.dao.impl.SeatDaoImpl;
+import com.mytickets.model.SeatAction;
 import com.mytickets.model.SeatHoldInfo;
 import com.mytickets.model.SeatLevel;
 import com.mytickets.model.SeatReservation;
@@ -18,12 +20,12 @@ public interface SeatDao {
 
 	List<SeatsByLevel> getSeatsInLevel(Calendar currentTime, Optional<Set<Integer>> levelIds);
 
-	SeatHoldInfo holdSeats(Map<Integer, List<Integer>> seatsLocToHoldByLevel, String customerEmail,
+	SeatHoldInfo holdSeats(Map<SeatLevel, Collection<SeatAction>> seatsLocToHoldByLevel, String customerEmail,
 			Calendar holdStartTime, Calendar holdEndTime);
 
 	List<SeatLevel> getAllLevels();
 
-	Map<Integer, Integer> getTakenLocationsByLevel(Set<Integer> levels);
+	Map<Integer, List<Integer>> getTakenLocationsByLevel(Set<Integer> levels);
 
 	SeatReservation createReservation(int seatHoldId, String customerEmail);
 	

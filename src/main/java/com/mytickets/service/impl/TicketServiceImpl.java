@@ -1,6 +1,7 @@
 package com.mytickets.service.impl;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 import com.mytickets.dao.SeatDao;
+import com.mytickets.model.SeatAction;
 import com.mytickets.model.SeatHoldInfo;
 import com.mytickets.model.SeatLevel;
 import com.mytickets.model.SeatsByLevel;
@@ -53,16 +55,27 @@ public class TicketServiceImpl implements TicketService {
 		}).collect(Collectors.toSet());
 		Set<Integer> levelIds = filteredLevels.stream().mapToInt(x -> x.getLevelId()).boxed()
 				.collect(Collectors.toSet());
-		Map<Integer, List<Integer>> seatLocToHoldByLevel = calculateLocToHoldByLevel(
+		Map<SeatLevel, Collection<SeatAction>> seatLocToHoldByLevel = calculateLocToHoldByLevel(
 				bestNumberOfSeatsToHoldByLevel(numSeats, levelIds, startTime),
 				seatEventDao.getTakenLocationsByLevel(levelIds), seatLevels);
 		return seatEventDao.holdSeats(seatLocToHoldByLevel, customerEmail, startTime, endTime).toSeatHold();
 	}
 
-	private Map<Integer, List<Integer>> calculateLocToHoldByLevel(Map<Integer, Integer> seatsToHoldByLevel,
-			Map<Integer, Integer> takenLocationsByLevel, List<SeatLevel> seatLevels) {
-
-		return null;
+	private Map<SeatLevel, Collection<SeatAction>> calculateLocToHoldByLevel(Map<Integer, Integer> seatsToHoldByLevel,
+			Map<Integer, List<Integer>> takenLocationsByLevel, List<SeatLevel> seatLevels) {
+		Map<Integer, SeatLevel> seatLevelById = seatLevels.stream()
+				.collect(Collectors.toMap(x -> x.getLevelId(), v -> v));
+		Map<SeatLevel, Collection<SeatAction>> seatActionsToHoldByLevel = new HashMap<>();
+		for (Integer seatLevelToHold : seatsToHoldByLevel.keySet()) {
+			SeatLevel sl = seatLevelById.get(seatLevelToHold);
+			List<Integer> takenLocations = takenLocationsByLevel.get(seatLevelToHold);
+			Integer numOfSeatsToHold = seatsToHoldByLevel.get(seatLevelToHold);
+			Set<SeatAction> seatActionsToHold = sl.getSeatActionsToHold(takenLocations, numOfSeatsToHold);
+			if (!seatActionsToHold.isEmpty()) {
+				seatActionsToHoldByLevel.put(sl, seatActionsToHold);
+			}
+		}
+		return seatActionsToHoldByLevel;
 	}
 
 	public Map<Integer, Integer> bestNumberOfSeatsToHoldByLevel(int numSeats, Set<Integer> levelIds,
