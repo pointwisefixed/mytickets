@@ -1,4 +1,6 @@
-package com.mytickets.model;
+package com.mytickets.utils;
+
+import com.mytickets.model.SeatLevelLocation;
 
 public class SeatLocationUtils {
 

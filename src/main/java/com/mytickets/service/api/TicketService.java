@@ -78,7 +78,7 @@ public interface TicketService {
 
 	/**
 	 * Commit seats held for a specific customer
-	 *
+	 * If the hold has expired or the seat hold cannot be found, then we return null
 	 * @param seatHoldId
 	 *            the seat hold identifier
 	 * @param customerEmail

@@ -24,6 +24,6 @@ public class SeatAction {
 	private int seatLocationIndex;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private SeatLevel seatLevel;
-	@ManyToOne(fetch = FetchType.LAZY, optional = true)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private SeatHoldInfo hold;
 }
