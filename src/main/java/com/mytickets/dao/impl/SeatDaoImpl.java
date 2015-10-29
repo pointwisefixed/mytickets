@@ -34,13 +34,11 @@ import com.mytickets.utils.GsonUtils;
 
 public class SeatDaoImpl implements SeatDao {
 
-	private static final String GET_SEAT_COUNT_JQL = "select new com.mytickets.model.SeatsByLevel(l.levelId, "
-			+ "(l.rows * l.numOfSeatsInRow) as totalSeats, (select count(sa.id) "
-			+ "from SeatAction sa inner join sa.hold h left join h.reservation r "
-			+ "where sa.seatLevel.levelId in :levelIds and (h.seatHoldEndTime < :holdStartTime or "
-			+ "r.id is not null)) as reservedOrOnHoldSeats)"
-			+ "from SeatLevel l where l.levelId in :levelIds group by l.levelId order by l.levelId asc";
-
+	private static final String GET_SEAT_COUNT_JQL = "select new com.mytickets.model.SeatsByLevel(lv.levelId, "
+			+ "(lv.rows * lv.numOfSeatsInRow) as totalSeats, "
+			+ "(select count(sa.id) from lv.seatActions sa inner join sa.hold h left join h.reservation r where "
+			+ "(h.seatHoldEndTime < :holdStartTime or r.id is not null) or r.id is not null and lv.id = sa.seatLevel.id) as holdOrReservedSeats) "
+			+ "from SeatLevel lv where lv.levelId in :levelIds group by lv.levelId order by lv.levelId asc"; 
 	private static final String GET_SEATS_ON_HOLD = "select sa from SeatAction sa inner join fetch sa.seatLevel l left outer join sa.hold h "
 			+ "left outer join h.reservation r where (h.seatHoldEndTime > :now and r.id is null) or r.id is not null "
 			+ "and l.id in :levelIds";
@@ -89,6 +87,7 @@ public class SeatDaoImpl implements SeatDao {
 						level.getNumOfSeatsInRow(), seatAction.getSeatLocationIndex());
 				holdInfo.getSeatInfo().add(new SeatInfo(location.getRow(), location.getCol(), level.getLevelId()));
 				seatAction.setHold(holdInfo);
+				seatAction.setSeatLevel(level);
 			}
 			holdSeats.addAll(seatsToHoldByLevel.get(level));
 		}
@@ -130,9 +129,9 @@ public class SeatDaoImpl implements SeatDao {
 
 	@Override
 	@Transactional
-	public SeatReservation createReservation(int seatHoldId, String customerEmail) {
+	public SeatReservation createReservation(Calendar createdTime, int seatHoldId, String customerEmail) {
 		SeatReservation reservation = new SeatReservation();
-		reservation.setCreatedDate(Calendar.getInstance());
+		reservation.setCreatedDate(createdTime);
 		reservation.setCustomerEmail(customerEmail);
 		SeatHoldInfo holdInfo = new SeatHoldInfo();
 		holdInfo.setId(seatHoldId);

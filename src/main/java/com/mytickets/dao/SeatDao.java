@@ -27,7 +27,7 @@ public interface SeatDao {
 
 	Map<Integer, List<Integer>> getTakenLocationsByLevel(Set<Integer> levels);
 
-	SeatReservation createReservation(int seatHoldId, String customerEmail);
+	SeatReservation createReservation(Calendar createdTime, int seatHoldId, String customerEmail);
 	
 	Optional<SeatHoldInfo> getSeatHoldInfo(int seatHoldId);
 	

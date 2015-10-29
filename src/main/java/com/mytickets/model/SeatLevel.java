@@ -1,9 +1,10 @@
 package com.mytickets.model;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -17,7 +18,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name="mt_seat_level")
+@Table(name = "mt_seat_level")
 @Cacheable(true)
 public class SeatLevel {
 
@@ -35,12 +36,11 @@ public class SeatLevel {
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "seatLevel")
 	private Set<SeatAction> seatActions;
 
-	public Set<SeatAction> getSeatActionsToHold(List<Integer> takenLocations, Integer numOfSeatsToHoldForLevel) {
-		Set<SeatAction> result = new TreeSet<>();
+	public Collection<SeatAction> getSeatActionsToHold(List<Integer> takenLocations, Integer numOfSeatsToHoldForLevel) {
+		List<SeatAction> result = new ArrayList<>();
 		for (int i = 0; i < numOfSeatsToHoldForLevel; i++) {
 			if (!takenLocations.contains(i)) {
 				SeatAction sa = new SeatAction();
-				sa.setSeatLevel(this);
 				sa.setSeatLocationIndex(i);
 				result.add(sa);
 			}

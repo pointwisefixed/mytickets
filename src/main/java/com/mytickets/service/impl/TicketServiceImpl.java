@@ -17,21 +17,24 @@ import com.mytickets.model.SeatAction;
 import com.mytickets.model.SeatHoldInfo;
 import com.mytickets.model.SeatLevel;
 import com.mytickets.model.SeatsByLevel;
+import com.mytickets.service.api.DateService;
 import com.mytickets.service.api.SeatHold;
 import com.mytickets.service.api.TicketService;
 
 public class TicketServiceImpl implements TicketService {
 
 	@Inject
-	private SeatDao seatEventDao;
+	private SeatDao seatDao;
 	@Inject
 	@Named("seatHoldTimeInSeconds")
 	private Integer seatHoldTimeInSeconds;
+	@Inject
+	private DateService dateService;
 
 	@Override
 	public int numSeatsAvailable(Optional<Integer> venueLevel) {
-		Calendar currentTime = Calendar.getInstance();
-		List<SeatsByLevel> freeSeats = seatEventDao.getSeatsInLevel(currentTime, Optional.empty());
+		Calendar currentTime = dateService.getCurrentTime();
+		List<SeatsByLevel> freeSeats = seatDao.getSeatsInLevel(currentTime, Optional.empty());
 		Map<Integer, Integer> seatByLevel = freeSeats.stream()
 				.collect(Collectors.toMap(x -> x.getLevelId(), x -> x.getAvailableSeats()));
 		if (venueLevel.isPresent()) {
@@ -46,10 +49,10 @@ public class TicketServiceImpl implements TicketService {
 			String customerEmail) {
 		int ml = minLevel.orElse(Integer.MIN_VALUE);
 		int mx = maxLevel.orElse(Integer.MAX_VALUE);
-		Calendar startTime = Calendar.getInstance();
+		Calendar startTime = dateService.getCurrentTime();
 		Calendar endTime = (Calendar) startTime.clone();
 		endTime.add(Calendar.SECOND, seatHoldTimeInSeconds);
-		List<SeatLevel> seatLevels = seatEventDao.getAllLevels();
+		List<SeatLevel> seatLevels = seatDao.getAllLevels();
 		Set<SeatLevel> filteredLevels = seatLevels.stream().filter(l -> {
 			return l.getLevelId() >= ml && l.getLevelId() <= mx;
 		}).collect(Collectors.toSet());
@@ -57,8 +60,8 @@ public class TicketServiceImpl implements TicketService {
 				.collect(Collectors.toSet());
 		Map<SeatLevel, Collection<SeatAction>> seatLocToHoldByLevel = calculateLocToHoldByLevel(
 				bestNumberOfSeatsToHoldByLevel(numSeats, levelIds, startTime),
-				seatEventDao.getTakenLocationsByLevel(levelIds), seatLevels);
-		return seatEventDao.holdSeats(seatLocToHoldByLevel, customerEmail, startTime, endTime).toSeatHold();
+				seatDao.getTakenLocationsByLevel(levelIds), seatLevels);
+		return seatDao.holdSeats(seatLocToHoldByLevel, customerEmail, startTime, endTime).toSeatHold();
 	}
 
 	private Map<SeatLevel, Collection<SeatAction>> calculateLocToHoldByLevel(Map<Integer, Integer> seatsToHoldByLevel,
@@ -70,7 +73,7 @@ public class TicketServiceImpl implements TicketService {
 			SeatLevel sl = seatLevelById.get(seatLevelToHold);
 			List<Integer> takenLocations = takenLocationsByLevel.get(seatLevelToHold);
 			Integer numOfSeatsToHold = seatsToHoldByLevel.get(seatLevelToHold);
-			Set<SeatAction> seatActionsToHold = sl.getSeatActionsToHold(takenLocations, numOfSeatsToHold);
+			Collection<SeatAction> seatActionsToHold = sl.getSeatActionsToHold(takenLocations, numOfSeatsToHold);
 			if (!seatActionsToHold.isEmpty()) {
 				seatActionsToHoldByLevel.put(sl, seatActionsToHold);
 			}
@@ -80,7 +83,7 @@ public class TicketServiceImpl implements TicketService {
 
 	public Map<Integer, Integer> bestNumberOfSeatsToHoldByLevel(int numSeats, Set<Integer> levelIds,
 			Calendar holdStartTime) {
-		List<SeatsByLevel> seatCountByLevel = seatEventDao.getSeatsInLevel(holdStartTime, Optional.of(levelIds));
+		List<SeatsByLevel> seatCountByLevel = seatDao.getSeatsInLevel(holdStartTime, Optional.of(levelIds));
 		seatCountByLevel
 				.sort((o1, o2) -> o1.getLevelId() == o2.getLevelId() ? 0 : o1.getLevelId() > o2.getLevelId() ? 1 : -1);
 		Map<Integer, Integer> numberOfSeatsToHoldByLevel = new HashMap<>();
@@ -102,11 +105,11 @@ public class TicketServiceImpl implements TicketService {
 	@Override
 	@Transactional
 	public String reserveSeats(int seatHoldId, String customerEmail) {
-		Optional<SeatHoldInfo> seatHold = seatEventDao.getSeatHoldInfo(seatHoldId);
-		Calendar now = Calendar.getInstance();
+		Optional<SeatHoldInfo> seatHold = seatDao.getSeatHoldInfo(seatHoldId);
+		Calendar now = dateService.getCurrentTime();
 		if (!seatHold.isPresent() || seatHold.get().getSeatHoldEndTime().compareTo(now) <= 0)
 			return null;
-		return seatEventDao.createReservation(seatHoldId, customerEmail).getId();
+		return seatDao.createReservation(now, seatHoldId, customerEmail).getId();
 	}
 
 }
