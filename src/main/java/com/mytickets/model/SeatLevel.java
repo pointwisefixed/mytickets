@@ -15,10 +15,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Entity
 @Table(name = "mt_seat_level")
+@EqualsAndHashCode(exclude = { "seatActions" })
 @Cacheable(true)
 public class SeatLevel {
 
@@ -38,14 +40,18 @@ public class SeatLevel {
 
 	public Collection<SeatAction> getSeatActionsToHold(List<Integer> takenLocations, Integer numOfSeatsToHoldForLevel) {
 		List<SeatAction> result = new ArrayList<>();
-		for (int i = 0; i < numOfSeatsToHoldForLevel; i++) {
+		int i = 0;
+		while (numOfSeatsToHoldForLevel > 0) {
 			if (!takenLocations.contains(i)) {
 				SeatAction sa = new SeatAction();
 				sa.setSeatLocationIndex(i);
 				result.add(sa);
+				numOfSeatsToHoldForLevel--;
 			}
+			i++;
 		}
 
 		return result;
 	}
+
 }
