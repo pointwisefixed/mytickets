@@ -1,5 +1,6 @@
 package com.mytickets.service.impl;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -72,6 +73,9 @@ public class TicketServiceImpl implements TicketService {
 		for (Integer seatLevelToHold : seatsToHoldByLevel.keySet()) {
 			SeatLevel sl = seatLevelById.get(seatLevelToHold);
 			List<Integer> takenLocations = takenLocationsByLevel.get(seatLevelToHold);
+			if(takenLocations == null){
+				takenLocations = new ArrayList<>();
+			}
 			Integer numOfSeatsToHold = seatsToHoldByLevel.get(seatLevelToHold);
 			Collection<SeatAction> seatActionsToHold = sl.getSeatActionsToHold(takenLocations, numOfSeatsToHold);
 			if (!seatActionsToHold.isEmpty()) {

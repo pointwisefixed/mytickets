@@ -1,18 +1,24 @@
 package com.mytickets.rest.service;
 
 import static spark.Spark.get;
+import static spark.Spark.post;
 
 import java.util.Optional;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.mytickets.dao.SeatDao;
+import com.mytickets.rest.service.client.ClientHoldInfo;
+import com.mytickets.service.api.SeatHold;
 import com.mytickets.service.api.TicketService;
+import com.mytickets.utils.GsonUtils;
 
 import spark.servlet.SparkApplication;
 
 public class ApiServer implements SparkApplication {
 
+	private static final String APPLICATION_JSON_CONTENT_TYPE = "application/json";
 	@Inject
 	private SeatDao seatDao;
 	@Inject
@@ -26,6 +32,37 @@ public class ApiServer implements SparkApplication {
 
 	private void doRouting() {
 		doGetNumOfSeatsAvailableRouting();
+		doPostHoldSeatRouting();
+		doPostCreateReservationRouting();
+	}
+
+	private void doPostCreateReservationRouting() {
+		post("/mytickets/holds", "json", (req, resp) -> {
+			try {
+				String requestBody = req.body();
+				Gson gson = GsonUtils.createWithLowerNamingPolicy();
+				ClientHoldInfo holdInfo = gson.fromJson(requestBody, ClientHoldInfo.class);
+				int numSeats = holdInfo.getNumSeats();
+				if(numSeats <= 0){
+					resp.status(400);
+					return "Bad Request - num_seats has to be greater than 0";					
+				}
+				Optional<Integer> minLevel = Optional.ofNullable(holdInfo.getMinLevel());
+				Optional<Integer> maxLevel = Optional.ofNullable(holdInfo.getMaxLevel());
+				String customerEmail = holdInfo.getCustomerEmail();
+				SeatHold seatHold = ticketService.findAndHoldSeats(numSeats, minLevel, maxLevel, customerEmail);
+				resp.status(200);
+				resp.type(APPLICATION_JSON_CONTENT_TYPE);
+				return gson.toJson(seatHold);
+			} catch (Exception ex) {
+				resp.status(400);
+				return "Bad Request - num_seats and customer_email are required.";
+			}
+		});
+	}
+
+	private void doPostHoldSeatRouting() {
+
 	}
 
 	private void doGetNumOfSeatsAvailableRouting() {
@@ -40,12 +77,17 @@ public class ApiServer implements SparkApplication {
 				}
 			}
 			Optional<Integer> venueLevel = Optional.ofNullable(level);
-			int result = ticketService.numSeatsAvailable(venueLevel);
-			resp.status(200);
-			resp.type("application/json");
-			JsonObject jo = new JsonObject();
-			jo.addProperty("num_of_seats_available", result);
-			return jo.toString();
+			try {
+				int result = ticketService.numSeatsAvailable(venueLevel);
+				resp.status(200);
+				resp.type(APPLICATION_JSON_CONTENT_TYPE);
+				JsonObject jo = new JsonObject();
+				jo.addProperty("num_of_seats_available", result);
+				return jo.toString();
+			} catch (Exception ex) {
+				resp.status(400);
+				return "Bad Request - level must be a number";
+			}
 		});
 	}
 

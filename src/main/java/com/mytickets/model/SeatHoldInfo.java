@@ -1,8 +1,10 @@
 package com.mytickets.model;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -33,8 +35,8 @@ public class SeatHoldInfo {
 	private Calendar seatHoldStartTime;
 	@Column(name = "hold_end_time", nullable = false)
 	private Calendar seatHoldEndTime;
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "hold")
-	private Set<SeatAction> heldSeats;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "hold", cascade = CascadeType.PERSIST)
+	private List<SeatAction> heldSeats;
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "seatHoldInfo")
 	private SeatReservation reservation;
 

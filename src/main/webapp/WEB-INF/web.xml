@@ -13,6 +13,6 @@
 	</filter-mapping>
 
 	<listener>
-		<listener-class>com.mytickets.servletlistener.myTicketsServletListener</listener-class>
+		<listener-class>com.mytickets.servlet.MyTicketsServletListener</listener-class>
 	</listener>
 </web-app>

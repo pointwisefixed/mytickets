@@ -99,8 +99,8 @@ public class SeatDaoTest {
 		Assert.assertTrue(info.getSeatHoldStartTime().compareTo(startTime) == 0);
 		seatHoldId = info.getId();
 
-		Calendar futureTime = (Calendar) endTime.clone();
-		futureTime.add(Calendar.SECOND, 120);
+		Calendar futureTime = (Calendar) startTime.clone();
+		futureTime.add(Calendar.SECOND, 50);
 
 		List<SeatsByLevel> seatsByLevel = seatDao.getSeatsInLevel(futureTime, Optional.empty());
 		SeatsByLevel sl1 = seatsByLevel.get(0);

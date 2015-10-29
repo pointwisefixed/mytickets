@@ -14,6 +14,9 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -34,17 +37,17 @@ import com.mytickets.utils.GsonUtils;
 
 public class SeatDaoImpl implements SeatDao {
 
+	private static final Logger log = LoggerFactory.getLogger(SeatDaoImpl.class);
+
 	private static final String GET_SEAT_COUNT_JQL = "select new com.mytickets.model.SeatsByLevel(lv.levelId, "
 			+ "(lv.rows * lv.numOfSeatsInRow) as totalSeats, "
-			+ "(select count(sa.id) from lv.seatActions sa inner join sa.hold h "
-			+ "left join h.reservation re where "
-			+ "(h.seatHoldEndTime < :now and re.id is null) or re.id is not null "
+			+ "(select count(sa.id) from lv.seatActions sa inner join sa.hold h " + "left join h.reservation re where "
+			+ "(h.seatHoldEndTime > :now and re.id is null) or re.id is not null "
 			+ "and lv.id = sa.seatLevel.id) as holdOrReservedSeats) "
-			+ "from SeatLevel lv where lv.levelId in :levelIds group by lv.levelId order by lv.levelId asc"; 
+			+ "from SeatLevel lv where lv.levelId in :levelIds group by lv.levelId order by lv.levelId asc";
 	private static final String GET_SEATS_ON_HOLD = "select sa from SeatAction sa inner join fetch sa.seatLevel l left outer join sa.hold h "
-			+ "left outer join h.reservation r where (h.seatHoldEndTime < :now and r.id is null) "
-			+ "or r.id is not null "
-			+ "and l.id in :levelIds order by l.id asc";
+			+ "left outer join h.reservation r where (h.seatHoldEndTime > :now and r.id is null) "
+			+ "or r.id is not null " + "and l.id in :levelIds order by l.id asc";
 
 	private static final String GET_ALL_LEVEL_JQL = "select l from SeatLevel l order by l.levelId asc";
 
@@ -58,6 +61,8 @@ public class SeatDaoImpl implements SeatDao {
 	@Override
 	@Transactional
 	public List<SeatsByLevel> getSeatsInLevel(Calendar currentTime, Optional<Set<Integer>> levelIds) {
+		log.info("Getting seats in level at " + currentTime.getTime());
+		
 		EntityManager em = entityManagerProvider.get();
 		TypedQuery<SeatsByLevel> query = em.createQuery(GET_SEAT_COUNT_JQL, SeatsByLevel.class);
 		Set<Integer> levels = levelIds
@@ -79,7 +84,6 @@ public class SeatDaoImpl implements SeatDao {
 			Calendar holdStartTime, Calendar holdEndTime) {
 		SeatHoldInfo holdInfo = new SeatHoldInfo();
 		holdInfo.setSeatInfo(new HashSet<>());
-		;
 		holdInfo.setSeatHoldStartTime(holdStartTime);
 		holdInfo.setSeatHoldEndTime(holdEndTime);
 		holdInfo.setCustomerEmail(customerEmail);
@@ -95,12 +99,9 @@ public class SeatDaoImpl implements SeatDao {
 			holdSeats.addAll(seatsToHoldByLevel.get(level));
 		}
 		EntityManager em = entityManagerProvider.get();
+		holdInfo.setHeldSeats(holdSeats);
 		em.persist(holdInfo);
-
-		for (SeatAction seatAction : holdSeats) {
-			em.persist(seatAction);
-		}
-
+		em.flush();
 		return holdInfo;
 	}
 
@@ -141,6 +142,7 @@ public class SeatDaoImpl implements SeatDao {
 		holdInfo.setId(seatHoldId);
 		reservation.setSeatHoldInfo(holdInfo);
 		entityManagerProvider.get().persist(reservation);
+		entityManagerProvider.get().flush();
 		return reservation;
 	}
 
