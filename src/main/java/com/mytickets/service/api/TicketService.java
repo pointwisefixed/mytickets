@@ -62,9 +62,9 @@ public interface TicketService {
 	 * @param numSeats
 	 *            the number of seats to find and hold
 	 * @param minLevel
-	 *            the minimum venue level
+	 *            the minimum venue level - minimum meaning better
 	 * @param maxLevel
-	 *            the maximum venue level
+	 *            the maximum venue level - maximum meaning worse
 	 * @param customerEmail
 	 *            unique identifier for the customer
 	 * @return a SeatHold object identifying the specific seats and related
