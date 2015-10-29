@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -98,7 +100,7 @@ public class SeatDaoTest {
 		seatHoldId = info.getId();
 
 		Calendar futureTime = (Calendar) endTime.clone();
-		futureTime.add(Calendar.SECOND, 70);
+		futureTime.add(Calendar.SECOND, 120);
 
 		List<SeatsByLevel> seatsByLevel = seatDao.getSeatsInLevel(futureTime, Optional.empty());
 		SeatsByLevel sl1 = seatsByLevel.get(0);
@@ -109,13 +111,26 @@ public class SeatDaoTest {
 		Assert.assertEquals((20 * 100) - level2HoldCount, sl2.getAvailableSeats());
 		Assert.assertEquals((15 * 100) - level3HoldCount, sl3.getAvailableSeats());
 		Assert.assertEquals((15 * 100) - level4HoldCount, sl4.getAvailableSeats());
+
+		Set<Integer> levels = level.stream().mapToInt(x -> x.getLevelId()).boxed().collect(Collectors.toSet());
+		Map<Integer, List<Integer>> takenLocations = seatDao.getTakenLocationsByLevel(futureTime, levels);
+		List<Integer> l1Taken = takenLocations.get(1);
+		List<Integer> l2Taken = takenLocations.get(2);
+		List<Integer> l3Taken = takenLocations.get(3);
+		List<Integer> l4Taken = takenLocations.get(4);
+		Assert.assertEquals(level1HoldCount, l1Taken.size());
+		Assert.assertEquals(Integer.valueOf(9), l1Taken.get(9));
+		Assert.assertEquals(level2HoldCount, l2Taken.size());
+		Assert.assertEquals(level3HoldCount, l3Taken.size());
+		Assert.assertEquals(level4HoldCount, l4Taken.size());
 	}
 
 	@Test(dependsOnMethods = { "testAvailableOnHold" })
 	public void testCreateReservation() {
 		Calendar pastTime = Calendar.getInstance();
 		pastTime.add(Calendar.SECOND, -100);
-		SeatReservation reservation = seatDao.createReservation(Calendar.getInstance(),seatHoldId, "gary1@garyrosales.com");
+		SeatReservation reservation = seatDao.createReservation(Calendar.getInstance(), seatHoldId,
+				"gary1@garyrosales.com");
 		Assert.assertNotNull(reservation);
 		Assert.assertNotNull(reservation.getId());
 		Assert.assertEquals("gary1@garyrosales.com", reservation.getCustomerEmail());

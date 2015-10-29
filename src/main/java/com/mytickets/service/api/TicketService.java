@@ -59,9 +59,6 @@ public interface TicketService {
 
 	/**
 	 * Find and hold the best available seats for a customer
-	 *
-	 * @param eventId
-	 *            the event identifier
 	 * @param numSeats
 	 *            the number of seats to find and hold
 	 * @param minLevel

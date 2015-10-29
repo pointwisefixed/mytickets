@@ -60,7 +60,7 @@ public class TicketServiceImpl implements TicketService {
 				.collect(Collectors.toSet());
 		Map<SeatLevel, Collection<SeatAction>> seatLocToHoldByLevel = calculateLocToHoldByLevel(
 				bestNumberOfSeatsToHoldByLevel(numSeats, levelIds, startTime),
-				seatDao.getTakenLocationsByLevel(levelIds), seatLevels);
+				seatDao.getTakenLocationsByLevel(dateService.getCurrentTime(), levelIds), seatLevels);
 		return seatDao.holdSeats(seatLocToHoldByLevel, customerEmail, startTime, endTime).toSeatHold();
 	}
 
