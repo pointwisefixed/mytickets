@@ -33,6 +33,6 @@ public class SeatReservation {
 	private Calendar createdDate;
 
 	@OneToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "seat_hold_info")
+	@JoinColumn(name = "seat_hold_info_id")
 	private SeatHoldInfo seatHoldInfo;
 }

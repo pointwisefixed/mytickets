@@ -14,9 +14,6 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -37,7 +34,6 @@ import com.mytickets.utils.GsonUtils;
 
 public class SeatDaoImpl implements SeatDao {
 
-	private static final Logger log = LoggerFactory.getLogger(SeatDaoImpl.class);
 
 	private static final String GET_SEAT_COUNT_JQL = "select new com.mytickets.model.SeatsByLevel(lv.levelId, "
 			+ "(lv.rows * lv.numOfSeatsInRow) as totalSeats, "
@@ -60,9 +56,7 @@ public class SeatDaoImpl implements SeatDao {
 
 	@Override
 	@Transactional
-	public List<SeatsByLevel> getSeatsInLevel(Calendar currentTime, Optional<Set<Integer>> levelIds) {
-		log.info("Getting seats in level at " + currentTime.getTime());
-		
+	public List<SeatsByLevel> getSeatsInLevel(Calendar currentTime, Optional<Set<Integer>> levelIds) {	
 		EntityManager em = entityManagerProvider.get();
 		TypedQuery<SeatsByLevel> query = em.createQuery(GET_SEAT_COUNT_JQL, SeatsByLevel.class);
 		Set<Integer> levels = levelIds
@@ -101,7 +95,6 @@ public class SeatDaoImpl implements SeatDao {
 		EntityManager em = entityManagerProvider.get();
 		holdInfo.setHeldSeats(holdSeats);
 		em.persist(holdInfo);
-		em.flush();
 		return holdInfo;
 	}
 
@@ -142,7 +135,6 @@ public class SeatDaoImpl implements SeatDao {
 		holdInfo.setId(seatHoldId);
 		reservation.setSeatHoldInfo(holdInfo);
 		entityManagerProvider.get().persist(reservation);
-		entityManagerProvider.get().flush();
 		return reservation;
 	}
 

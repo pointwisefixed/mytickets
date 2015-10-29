@@ -20,7 +20,7 @@
 			<property name="hibernate.connection.driver_class" value="org.h2.Driver" />
 			<property name="hibernate.connection.url" value="jdbc:h2:mem:mytickets" />
 			<property name="hibernate.connection.user" value="sa" />
-			<property name="hibernate.show_sql" value="true"/> 
+			<!-- <property name="hibernate.show_sql" value="true"/> -->
 			<property name="hibernate.flushMode" value="FLUSH_AUTO" />
 			<property name="javax.persistence.schema-generation.database.action"
 				value="drop-and-create" />

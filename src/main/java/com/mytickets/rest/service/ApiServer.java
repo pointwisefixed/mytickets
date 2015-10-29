@@ -9,7 +9,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.mytickets.dao.SeatDao;
+import com.mytickets.rest.service.client.ClientCreateReservationInfo;
 import com.mytickets.rest.service.client.ClientHoldInfo;
+import com.mytickets.rest.service.exceptions.HoldExpiredException;
 import com.mytickets.service.api.SeatHold;
 import com.mytickets.service.api.TicketService;
 import com.mytickets.utils.GsonUtils;
@@ -36,16 +38,16 @@ public class ApiServer implements SparkApplication {
 		doPostCreateReservationRouting();
 	}
 
-	private void doPostCreateReservationRouting() {
+	private void doPostHoldSeatRouting() {
 		post("/mytickets/holds", "json", (req, resp) -> {
 			try {
 				String requestBody = req.body();
 				Gson gson = GsonUtils.createWithLowerNamingPolicy();
 				ClientHoldInfo holdInfo = gson.fromJson(requestBody, ClientHoldInfo.class);
 				int numSeats = holdInfo.getNumSeats();
-				if(numSeats <= 0){
+				if (numSeats <= 0) {
 					resp.status(400);
-					return "Bad Request - num_seats has to be greater than 0";					
+					return "Bad Request - num_seats has to be greater than 0";
 				}
 				Optional<Integer> minLevel = Optional.ofNullable(holdInfo.getMinLevel());
 				Optional<Integer> maxLevel = Optional.ofNullable(holdInfo.getMaxLevel());
@@ -61,8 +63,33 @@ public class ApiServer implements SparkApplication {
 		});
 	}
 
-	private void doPostHoldSeatRouting() {
-
+	private void doPostCreateReservationRouting() {
+		post("/mytickets/reservations", "json", (req, resp) -> {
+			try {
+				String requestBody = req.body();
+				Gson gson = GsonUtils.createWithLowerNamingPolicy();
+				ClientCreateReservationInfo reservationInfo = gson.fromJson(requestBody,
+						ClientCreateReservationInfo.class);
+				int seatHoldId = reservationInfo.getSeatHoldId();
+				if (seatHoldId <= 0) {
+					resp.status(400);
+					return "Bad Request - seat_hold_id has to be greater than 0";
+				}
+				String customerEmail = reservationInfo.getCustomerEmail();
+				String reservationId = ticketService.reserveSeats(seatHoldId, customerEmail);
+				if (reservationId == null) {
+					throw new HoldExpiredException("hold has expired");
+				}
+				resp.status(200);
+				resp.type(APPLICATION_JSON_CONTENT_TYPE);
+				JsonObject result = new JsonObject();
+				result.addProperty("reservation_id", reservationId);
+				return result.toString();
+			} catch (HoldExpiredException ex) {
+				resp.status(400);
+				return "Hold has expired";
+			}
+		});
 	}
 
 	private void doGetNumOfSeatsAvailableRouting() {

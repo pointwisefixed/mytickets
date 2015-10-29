@@ -4,6 +4,10 @@ A simple online reservation system built on an on-memory db
 
 Originally I want it to use this to sharp up my reactjs skills for a front-end, but given my time constraints (work and other stuff) I'll just leave it to be a simple rest-api
 
+# Config
+
+Change the config.properties file seatHoldTimeInSeconds property for the number of seconds to hold a reservation. Default is 60 seconds.
+
 # To run tests
 
 mvn clean test
